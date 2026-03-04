@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>For You </title>
+
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Cormorant+Garamond:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box}
+
+body{
+margin:0;
+font-family:'Inter',sans-serif;
+background:#f2f9ff;
+height:100vh;
+overflow:hidden;
+}
+
+#app{
+height:100%;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.card{
+position:absolute;
+width:90%;
+max-width:420px;
+max-height:90vh;
+overflow:auto;
+background:#ffffff;
+border-radius:26px;
+padding:40px 32px;
+text-align:center;
+box-shadow:0 30px 70px rgba(135,206,250,.35);
+opacity:0;
+transform:scale(.94) translateY(40px);
+transition:.7s cubic-bezier(.19,1,.22,1);
+pointer-events:none;
+}
+
+.card::-webkit-scrollbar{width:6px}
+.card::-webkit-scrollbar-thumb{background:#87cefa;border-radius:10px}
+
+.card.active{
+opacity:1;
+transform:scale(1) translateY(0);
+pointer-events:auto;
+}
+
+h1,h2{
+font-family:'DM Serif Display',serif;
+margin:0 0 14px;
+color:#3a8ec4;
+}
+
+p{
+font-size:15px;
+line-height:1.7;
+opacity:.85;
+color:#4a6f8a;
+}
+
+button{
+padding:12px 26px;
+border:none;
+border-radius:999px;
+background:#87cefa;
+cursor:pointer;
+margin-top:18px;
+font-size:15px;
+transition:.25s;
+color:#1f4f6e;
+}
+button:hover{
+transform:scale(1.05);
+box-shadow:0 10px 25px rgba(135,206,250,.6);
+}
+
+/* PIN */
+.pin-display{
+display:flex;
+justify-content:center;
+gap:12px;
+margin:25px 0;
+}
+.dot{
+width:18px;
+height:18px;
+border-radius:50%;
+border:2px solid #87cefa;
+}
+.dot.fill{background:#87cefa}
+
+.keypad{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:12px;
+}
+.keypad button{
+padding:16px;
+font-size:18px;
+border-radius:14px;
+}
+
+/* GAME */
+#options{
+display:flex;
+flex-direction:column;
+gap:12px;
+margin-top:20px;
+}
+#options button{
+background:#f2f9ff;
+border:1px solid #87cefa;
+}
+
+.score-box{
+margin-top:22px;
+font-size:15px;
+letter-spacing:.5px;
+color:#3a6f94;
+}
+
+#feedback{
+margin-top:14px;
+min-height:22px;
+font-size:14px;
+transition:.3s;
+color:#3a6f94;
+}
+
+.correctAnim{
+animation:pop .4s ease;
+background:#d6f0ff !important;
+border-color:#6ec6ff !important;
+}
+@keyframes pop{
+0%{transform:scale(.9)}
+60%{transform:scale(1.08)}
+100%{transform:scale(1)}
+}
+
+.wrongAnim{
+animation:shake .4s;
+background:#cde8ff !important;
+border-color:#4fb3ff !important;
+}
+
+@keyframes shake{
+25%{transform:translateX(-6px)}
+50%{transform:translateX(6px)}
+75%{transform:translateX(-4px)}
+}
+
+/* TIMER */
+.lovebox{
+background:linear-gradient(145deg,#ffffff,#eaf6ff);
+border-radius:22px;
+padding:20px;
+margin-bottom:25px;
+box-shadow:0 12px 35px rgba(135,206,250,.45);
+border:1px solid rgba(135,206,250,.45);
+}
+
+.timer-title{
+font-size:12px;
+letter-spacing:2px;
+opacity:.6;
+color:#3a6f94;
+}
+
+.timer-display{
+font-family:'DM Serif Display',serif;
+font-size:28px;
+margin-top:8px;
+color:#2c7fb8;
+letter-spacing:1px;
+animation:pulse 2.5s infinite;
+}
+@keyframes pulse{50%{opacity:.5}}
+
+/* MEDIA */
+.reveal-box{
+margin:20px 0;
+aspect-ratio:16/9;
+display:flex;
+align-items:center;
+justify-content:center;
+border-radius:20px;
+border:2px dashed #87cefa;
+cursor:pointer;
+background:#f0f8ff;
+transition:.3s;
+}
+.reveal-box:hover{transform:scale(1.02)}
+
+/* LETTER FINAL */
+.letter{
+margin-top:22px;
+font-family:'Cormorant Garamond',serif;
+font-size:18px;
+line-height:1.3;
+letter-spacing:.4px;
+text-align:left;
+color:#1f4f6e;
+opacity:.95;
+min-height:100px;
+animation:fadeInText 1.2s ease;
+}
+
+.signature{
+margin-top:32px;
+text-align:right;
+font-family:'Playfair Display',serif;
+font-size:20px;
+letter-spacing:1px;
+color:#3a8ec4;
+animation:fadeInText 1.8s ease;
+}
+
+@keyframes fadeInText{
+from{opacity:0;transform:translateY(10px)}
+to{opacity:1;transform:translateY(0)}
+}
+
+/* HEART BACKGROUND */
+canvas{
+position:fixed;
+inset:0;
+z-index:-1;
+pointer-events:none;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="confettiCanvas"></canvas>
+
+<audio id="bgm" src="song.mp3" loop></audio>
+
+<div id="app">
+
+<!-- welcome -->
+<section class="card active">
+<h1>Hello, my dearest.</h1>
+<p>I've got something waiting for you<br>But let's take it step by step before you open it!</p>
+<button onclick="next()">Continue</button>
+</section>
+
+<!-- pin -->
+<section class="card">
+<h2>Enter the code 🔐</h2>
+<div class="pin-display" id="pin"></div>
+
+<div class="keypad">
+<button onclick="press(1)">1</button>
+<button onclick="press(2)">2</button>
+<button onclick="press(3)">3</button>
+<button onclick="press(4)">4</button>
+<button onclick="press(5)">5</button>
+<button onclick="press(6)">6</button>
+<button onclick="press(7)">7</button>
+<button onclick="press(8)">8</button>
+<button onclick="press(9)">9</button>
+<button onclick="clearPin()">⌫</button>
+<button onclick="press(0)">0</button>
+<button onclick="checkPin()">✔</button>
+</div>
+</section>
+
+<!-- quiz -->
+<section class="card">
+<h2 id="question">Little game 🎮</h2>
+<p>Answer correctly to earn points 🤍</p>
+<div id="options"></div>
+
+<div class="score-box">
+Points: <span id="score">0</span> / 3
+</div>
+
+<p id="feedback"></p>
+</section>
+
+<!-- final -->
+<section class="card">
+
+<h1>Moments that are ours. </h1>
+
+<div class="lovebox">
+<div class="timer-title">TIME WITH YOU</div>
+<div id="loveTimer" class="timer-display">loading...</div>
+</div>
+
+<div class="reveal-box" onclick="revealMemory(this)">
+Tap to reveal our memory
+</div>
+
+<div id="letter" class="letter"></div>
+<div id="sign" class="signature"></div>
+
+</section>
+
+</div>
+
+<script>
+const cards=document.querySelectorAll('.card');
+let page=0;
+const music=document.getElementById("bgm");
+music.volume=0.4;
+let musicStarted=false;
+
+function show(){
+cards.forEach(c=>c.classList.remove('active'));
+cards[page].classList.add('active');
+if(page===3)startTimer();
+}
+
+function next(){
+page++;
+
+if(page===1 && !musicStarted){
+music.play();
+musicStarted=true;
+}
+
+show();
+if(page===2)loadQuestion();
+}
+
+/* PIN */
+let pinInput='';
+const correctPin='0507';
+const pinDisplay=document.getElementById("pin");
+
+function renderDots(){
+pinDisplay.innerHTML='';
+for(let i=0;i<4;i++){
+const d=document.createElement("div");
+d.className="dot"+(i<pinInput.length?" fill":"");
+pinDisplay.appendChild(d);
+}}
+renderDots();
+
+function press(n){if(pinInput.length<4){pinInput+=n;renderDots();}}
+function clearPin(){pinInput=pinInput.slice(0,-1);renderDots();}
+
+function checkPin(){
+if(pinInput===correctPin)next();
+else{
+pinDisplay.classList.add('shake');
+setTimeout(()=>pinDisplay.classList.remove('shake'),400);
+pinInput='';renderDots();
+}
+}
+
+/* QUIZ */
+const questions=[
+{q:"What month did we start dating?",options:["May","June","July"],correct:2},
+{q:"How long have we been together?",options:["Seven months","Eight months","Nine months"],correct:1},
+{q:"What's the thing I enjoy the most?",options:["Fishing","Spending time with you","Cooking"],correct:1}
+];
+
+let currentQ=0,score=0;
+const scoreEl=document.getElementById("score");
+const question=document.getElementById("question");
+const options=document.getElementById("options");
+const feedback=document.getElementById("feedback");
+
+function loadQuestion(){
+const q=questions[currentQ];
+question.textContent=q.q;
+options.innerHTML="";
+feedback.textContent="";
+q.options.forEach((opt,i)=>{
+const b=document.createElement("button");
+b.textContent=opt;
+b.onclick=()=>checkAnswer(i,b);
+options.appendChild(b);
+});
+}
+
+function checkAnswer(i,btn){
+const q=questions[currentQ];
+
+if(i===q.correct){
+score++;
+scoreEl.textContent=score;
+btn.classList.add("correctAnim");
+feedback.textContent="Correct 🤍";
+
+setTimeout(()=>{
+currentQ++;
+if(currentQ<questions.length){loadQuestion();}
+else{next();}
+},900);
+
+}else{
+btn.classList.add("wrongAnim");
+feedback.textContent="Oops nope — try again 💭";
+}
+}
+
+/* TIMER */
+function startTimer(){
+
+    const start = new Date("2025-07-05T00:00:00");
+
+    setInterval(()=>{
+
+        const diff = new Date() - start;
+
+        const d = Math.floor(diff / 86400000);
+        const h = Math.floor(diff / 3600000) % 24;
+        const m = Math.floor(diff / 60000) % 60;
+        const s = Math.floor(diff / 1000) % 60;
+
+        loveTimer.textContent = `${d} days ${h}h ${m}m ${s}s`;
+
+    },1000);
+}
+
+/* REVEAL */
+function revealMemory(el){
+el.innerHTML=`<img src="pict.jpg" style="width:100%;height:100%;object-fit:cover;border-radius:18px">`;
+
+const text=`My love, I'm beyond grateful that God gives me another precious month with you. I can't wait for the month ahead, because everything feels ten times more meaningful when you're part of it.  ❤️
+
+I hope my gifts never feel ordinary to you. I just want them to be something you can treasure and you can open whenever you miss us— turning into pieces of memory that remind you we've walked through each month side by side, just the two of us, my love.
+
+I don't think there's that much left for me to day this time, because it feels like we've poured so much of ourselves into our daily conversations already. So many messages, full of warmth, jokes, and love— a soft reminder that we genuinely enjoy each other's presence. You’ve seen me in ways not many people have, and I’m grateful I let you. You’re too important to keep at the surface. You’re not just my lover, you feel like home, like everything. I look for you in my mind every single day, and somehow, you’re always there— even in my prayers.
+
+Happy 8th months to us, Junie. I pray blessings keep finding you, filling your days with blessings, success, good people, good health, long life, wealth, wisdom, and so much gratitude. I’m so happy we’ve made it past half a year together— it honestly feels like I won the lottery. The happiness is unreal.
+
+I appreciate you so much for accepting all of me. I'm sorry if I've caused you pain, anger, or disappointment. I'm sorry for making you worry sometimes because of my clumsiness. Still, I'm so thankful you're always there, listening to my everyday life. And thank you for being open with me, for feeling comfortable enough to be fully yourself. I hope you're happy with everything I give you. I give it with a sincere heart, because you genuinely deserve all the goodness this world can give, my love. 
+
+Once again, happy 8 months, Junie. I hope you're happy with this gift, it's truly just for you. Though honestly, it's you who makes everything feel special in the first place. `;
+
+let i=0;
+const letter=document.getElementById("letter");
+const sign=document.getElementById("sign");
+
+const type=setInterval(()=>{
+letter.innerHTML+=text.charAt(i);
+i++;
+if(i>=text.length){
+clearInterval(type);
+sign.innerHTML="With love,<br>Jojo";
+}
+},35);
+}
+
+/* HEARTS */
+const canvas=document.getElementById("confettiCanvas");
+const ctx=canvas.getContext("2d");
+canvas.width=innerWidth;
+canvas.height=innerHeight;
+
+const colors=[
+"rgba(27,60,115,0.35)",
+"rgba(46,90,172,0.35)",
+"rgba(111,168,255,0.35)"
+];
+
+let hearts=[];
+for(let i=0;i<140;i++){
+hearts.push({
+x:Math.random()*canvas.width,
+y:Math.random()*canvas.height,
+s:Math.random()*6+2,
+v:Math.random()*0.6+0.2,
+c:colors[Math.floor(Math.random()*colors.length)]
+});
+}
+
+function heart(x,y,s){
+ctx.beginPath();
+ctx.moveTo(x,y);
+ctx.bezierCurveTo(x,y-s,x-s,y-s,x-s,y);
+ctx.bezierCurveTo(x-s,y+s,x,y+s*1.4,x,y+s*1.8);
+ctx.bezierCurveTo(x,y+s*1.4,x+s,y+s,x+s,y);
+ctx.bezierCurveTo(x+s,y-s,x,y-s,x,y);
+ctx.fill();
+}
+
+function anim(){
+ctx.clearRect(0,0,canvas.width,canvas.height);
+
+ctx.shadowColor="rgba(111,168,255,0.6)";
+ctx.shadowBlur=12;
+
+hearts.forEach(h=>{
+ctx.fillStyle=h.c;
+heart(h.x,h.y,h.s);
+h.y+=h.v;
+if(h.y>canvas.height){
+h.y=-90;
+h.x=Math.random()*canvas.width;
+}
+});
+
+requestAnimationFrame(anim);
+}
+anim();
+</script>
+
+</body>
+</html>
